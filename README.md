@@ -8,7 +8,7 @@
 | **Batch** | 10B |
 | **Application No.** | IN26012596 |
 | **Project Type** | Internship Project Submission |
-| **Author** | Yash Singh ([@Yash-Singh607](https://github.com/Yash-Singh607)) |
+| **Author** | Anshika Shrivastava ([@ANSHIKA1220](https://github.com/ANSHIKA1220)) |
 | **Technologies** | HTML · CSS · JavaScript · Python (Flask) · MySQL |
 
 ---

@@ -220,20 +220,6 @@ Manager users cannot:
 
 If a Manager accesses an Admin-only API route, the server returns a permission error. If they access the Admin-only page route, they are redirected back to the dashboard with a clear flash message.
 
-### UI / UX
-
-- WorkTrack branding with `WT` logo initials
-- Tagline: **Assign. Track. Complete.**
-- Responsive layout with a mobile sidebar toggle
-- Deep navy / charcoal sidebar
-- Teal primary accent
-- Amber pending status badges
-- Green completed status badges
-- Dashboard metric cards
-- Progress bars for completion percentage
-- Flash messages and toast-style feedback
-- Clean table layouts for tasks, employees, reports, and users
-
 ---
 
 ## REST API Endpoints

@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 700" fill="none">
+  <rect width="600" height="700" fill="#0f2744"/>
+  <circle cx="480" cy="120" r="180" fill="#1e40af" opacity="0.25"/>
+  <circle cx="80" cy="580" r="140" fill="#2563eb" opacity="0.15"/>
+  <!-- Desk / workspace illustration -->
+  <rect x="120" y="380" width="360" height="12" rx="6" fill="#334155"/>
+  <rect x="140" y="200" width="200" height="140" rx="8" fill="#1e3a5f" stroke="#3b82f6" stroke-width="2"/>
+  <rect x="155" y="220" width="170" height="100" rx="4" fill="#0f172a"/>
+  <rect x="165" y="235" width="80" height="6" rx="3" fill="#3b82f6" opacity="0.8"/>
+  <rect x="165" y="250" width="120" height="4" rx="2" fill="#64748b"/>
+  <rect x="165" y="262" width="100" height="4" rx="2" fill="#64748b"/>
+  <rect x="165" y="274" width="110" height="4" rx="2" fill="#64748b"/>
+  <rect x="165" y="290" width="60" height="18" rx="4" fill="#2563eb"/>
+  <!-- Clipboard -->
+  <rect x="380" y="240" width="90" height="120" rx="6" fill="#fff" opacity="0.95"/>
+  <rect x="405" y="228" width="40" height="16" rx="4" fill="#94a3b8"/>
+  <rect x="395" y="265" width="60" height="5" rx="2" fill="#cbd5e1"/>
+  <rect x="395" y="280" width="50" height="5" rx="2" fill="#cbd5e1"/>
+  <rect x="395" y="295" width="55" height="5" rx="2" fill="#cbd5e1"/>
+  <circle cx="395" cy="320" r="8" fill="#22c55e"/>
+  <rect x="410" y="316" width="40" height="5" rx="2" fill="#e2e8f0"/>
+  <circle cx="395" cy="338" r="8" fill="#22c55e"/>
+  <rect x="410" y="334" width="35" height="5" rx="2" fill="#e2e8f0"/>
+  <!-- People silhouettes -->
+  <circle cx="200" cy="480" r="28" fill="#2563eb" opacity="0.7"/>
+  <rect x="178" y="510" width="44" height="60" rx="12" fill="#2563eb" opacity="0.7"/>
+  <circle cx="300" cy="470" r="32" fill="#3b82f6" opacity="0.8"/>
+  <rect x="274" y="504" width="52" height="70" rx="14" fill="#3b82f6" opacity="0.8"/>
+  <circle cx="400" cy="485" r="26" fill="#1d4ed8" opacity="0.7"/>
+  <rect x="382" y="513" width="40" height="55" rx="12" fill="#1d4ed8" opacity="0.7"/>
+  <!-- Title text area placeholder bars -->
+  <rect x="140" y="580" width="320" height="10" rx="5" fill="#fff" opacity="0.9"/>
+  <rect x="180" y="605" width="240" height="8" rx="4" fill="#94a3b8" opacity="0.6"/>
+</svg>

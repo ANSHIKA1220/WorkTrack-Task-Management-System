@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | TaskFlow</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="dashboard-page">
+    <div class="app-shell">
+        <!-- Sidebar — Notion / ClickUp style -->
+        <aside class="sidebar">
+            <div class="brand-lockup">
+                <div class="logo-mark">TF</div>
+                <span class="brand-name">TaskFlow</span>
+            </div>
+
+            <nav class="sidebar-nav">
+                <a href="#dashboard" class="sidebar-link sidebar-link--active" data-panel="dashboard">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+                    Dashboard
+                </a>
+                <a href="#employees" class="sidebar-link" data-panel="employees">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                    Employees
+                </a>
+                <a href="#reports" class="sidebar-link" data-panel="reports">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg>
+                    Reports
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="sidebar-user">
+                    <div class="user-avatar">{{ username[0]|upper }}</div>
+                    <div>
+                        <span class="sidebar-user-name">{{ username }}</span>
+                        <span class="role-tag role-{{ role|lower }}">{{ role }}</span>
+                    </div>
+                </div>
+                <a href="{{ url_for('logout') }}" class="sidebar-logout">Sign out</a>
+            </div>
+        </aside>
+
+        <!-- Main content -->
+        <div class="main-area">
+            <div class="hero-banner">
+                <img src="{{ url_for('static', filename='images/dashboard-hero.jpg') }}" alt="" class="hero-banner-img">
+                <div class="hero-banner-content">
+                    <p class="page-eyebrow">{{ role }} Workspace</p>
+                    <h1 class="page-title">Good day, {{ username }}</h1>
+                    <p class="page-desc">Assign tasks, manage employees, track completion.</p>
+                </div>
+            </div>
+
+            <div class="main-content">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                <div class="flash-messages">
+                    {% for category, message in messages %}
+                    <div class="flash flash-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                {% endwith %}
+
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <div class="metric-top"><span class="metric-label">Total Tasks</span><div class="metric-icon metric-icon--blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/></svg></div></div>
+                        <span class="metric-value" id="statTotal">—</span>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-top"><span class="metric-label">Pending</span><div class="metric-icon metric-icon--amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div></div>
+                        <span class="metric-value" id="statPending">—</span>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-top"><span class="metric-label">Completed</span><div class="metric-icon metric-icon--green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/></svg></div></div>
+                        <span class="metric-value" id="statDone">—</span>
+                    </div>
+                </div>
+
+                <!-- Dashboard panel -->
+                <div id="panel-dashboard" class="panel panel--active">
+                <div class="content-grid">
+                    <div class="content-col">
+                        <section class="card">
+                            <div class="card-head">
+                                <div class="card-head-icon card-head-icon--blue">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+                                </div>
+                                <div><h2>Assign Task</h2><p>Create and submit to MySQL</p></div>
+                            </div>
+                            <form id="taskForm" class="task-form">
+                                <div class="form-group">
+                                    <label for="task_id">Task ID</label>
+                                    <input type="text" id="task_id" value="Auto-generated" readonly class="readonly-field">
+                                </div>
+                                <div class="form-group">
+                                    <label for="employeeInput">Employee</label>
+                                    <div class="combobox" id="employeeCombobox">
+                                        <div class="combobox-control">
+                                            <svg class="combobox-icon" viewBox="0 0 20 20" fill="none"><path d="M9 17A8 8 0 1 0 9 1a8 8 0 0 0 0 16zM18 18l-4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+                                            <input type="text" id="employeeInput" placeholder="Search or add employee..." autocomplete="off">
+                                            <button type="button" class="combobox-clear hidden" id="employeeClear">&times;</button>
+                                        </div>
+                                        <input type="hidden" id="employee_id" name="employee_id" required>
+                                        <ul class="combobox-list hidden" id="employeeList"></ul>
+                                    </div>
+                                    <p class="field-hint" id="employeeCountHint">Loading...</p>
+                                </div>
+                                <div class="form-group">
+                                    <label for="task_title">Task Title</label>
+                                    <select id="task_title" name="task_title" required>
+                                        <option value="">Select type...</option>
+                                        {% for title in task_titles %}
+                                        <option value="{{ title }}">{{ title }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="completed">Status</label>
+                                    <select id="completed" name="completed" required>
+                                        <option value="false">Pending</option>
+                                        <option value="true">Completed</option>
+                                    </select>
+                                </div>
+                                <div class="form-actions">
+                                    <button type="submit" class="btn btn-primary btn-full" id="submitBtn">Submit Task</button>
+                                    <button type="reset" class="btn btn-ghost btn-full">Reset</button>
+                                </div>
+                            </form>
+                            <div id="formMessage" class="toast toast--hidden"></div>
+                        </section>
+                    </div>
+
+                    <section class="card card--table">
+                        <div class="card-head card-head--row">
+                            <div class="card-head">
+                                <div class="card-head-icon card-head-icon--green">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>
+                                </div>
+                                <div><h2>All Tasks</h2><p>Sorted by Task ID · Live from MySQL</p></div>
+                            </div>
+                            <span class="pill pill--live">Live</span>
+                        </div>
+                        <div class="table-wrap">
+                            <table id="tasksTable">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Employee</th>
+                                        <th>Task</th>
+                                        <th>Status</th>
+                                        <th>Date</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tasksBody">
+                                    <tr><td colspan="6" class="empty-cell">Loading tasks...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+                </div>
+                </div>
+
+                <!-- Employees panel -->
+                <div id="panel-employees" class="panel">
+                    <section class="card">
+                        <div class="card-head">
+                            <div class="card-head-icon card-head-icon--purple">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/><path d="M20 8v6M23 11h-6"/></svg>
+                            </div>
+                            <div><h2>Add Employee</h2><p>Build your team directory</p></div>
+                        </div>
+                        <form id="addEmployeeForm" class="inline-form">
+                            <input type="text" id="newEmployeeName" placeholder="Full name e.g. Yash Patel" maxlength="100" required>
+                            <button type="submit" class="btn btn-primary" id="addEmployeeBtn">Add</button>
+                        </form>
+                        <div id="addEmployeeMessage" class="toast toast--hidden"></div>
+                    </section>
+
+                    <section class="card card--table">
+                        <div class="card-head card-head--row">
+                            <div class="card-head">
+                                <div class="card-head-icon card-head-icon--purple">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                                </div>
+                                <div><h2>Employee Directory</h2><p id="employeeListCount">Loading employees...</p></div>
+                            </div>
+                        </div>
+                        <div class="panel-toolbar">
+                            <input type="search" id="employeeSearch" placeholder="Search employees..." class="search-input">
+                        </div>
+                        <div class="table-wrap">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Name</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="employeeListBody">
+                                    <tr><td colspan="2" class="empty-cell">Loading employees...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+                </div>
+
+                <!-- Reports panel -->
+                <div id="panel-reports" class="panel">
+                    <div class="metrics-grid metrics-grid--reports">
+                        <div class="metric-card">
+                            <div class="metric-top"><span class="metric-label">Completion Rate</span><div class="metric-icon metric-icon--green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/></svg></div></div>
+                            <span class="metric-value" id="reportCompletion">—</span>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-top"><span class="metric-label">Total Employees</span><div class="metric-icon metric-icon--blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div></div>
+                            <span class="metric-value" id="reportEmployees">—</span>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-top"><span class="metric-label">Avg Tasks / Employee</span><div class="metric-icon metric-icon--amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M18 17V9M13 17V5M8 17v-3"/></svg></div></div>
+                            <span class="metric-value" id="reportAvgTasks">—</span>
+                        </div>
+                    </div>
+
+                    <section class="card card--table">
+                        <div class="card-head">
+                            <div class="card-head-icon card-head-icon--green">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M18 17V9M13 17V5M8 17v-3"/></svg>
+                            </div>
+                            <div><h2>Tasks by Type</h2><p>Breakdown of assigned work</p></div>
+                        </div>
+                        <div class="table-wrap">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Task Type</th>
+                                        <th>Total</th>
+                                        <th>Completed</th>
+                                        <th>Pending</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="reportBody">
+                                    <tr><td colspan="4" class="empty-cell">Loading report...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

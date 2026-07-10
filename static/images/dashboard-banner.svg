@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 280" fill="none" preserveAspectRatio="xMidYMid slice">
+  <rect width="1200" height="280" fill="#0f2744"/>
+  <circle cx="1050" cy="40" r="120" fill="#1e40af" opacity="0.3"/>
+  <circle cx="150" cy="240" r="90" fill="#2563eb" opacity="0.2"/>
+  <!-- Chart bars -->
+  <rect x="80" y="160" width="24" height="60" rx="4" fill="#3b82f6" opacity="0.6"/>
+  <rect x="120" y="130" width="24" height="90" rx="4" fill="#2563eb" opacity="0.7"/>
+  <rect x="160" y="100" width="24" height="120" rx="4" fill="#1d4ed8" opacity="0.8"/>
+  <rect x="200" y="120" width="24" height="100" rx="4" fill="#3b82f6" opacity="0.6"/>
+  <!-- Task cards floating -->
+  <rect x="900" y="60" width="180" height="100" rx="10" fill="#fff" opacity="0.12" stroke="#3b82f6" stroke-width="1"/>
+  <rect x="920" y="80" width="80" height="6" rx="3" fill="#60a5fa"/>
+  <rect x="920" y="95" width="120" height="4" rx="2" fill="#64748b" opacity="0.8"/>
+  <rect x="920" y="108" width="100" height="4" rx="2" fill="#64748b" opacity="0.6"/>
+  <rect x="920" y="130" width="50" height="16" rx="8" fill="#22c55e" opacity="0.7"/>
+  <rect x="700" y="90" width="160" height="90" rx="10" fill="#fff" opacity="0.08" stroke="#64748b" stroke-width="1"/>
+  <rect x="720" y="110" width="60" height="6" rx="3" fill="#f59e0b" opacity="0.8"/>
+  <rect x="720" y="125" width="100" height="4" rx="2" fill="#64748b" opacity="0.6"/>
+  <rect x="720" y="150" width="55" height="16" rx="8" fill="#f59e0b" opacity="0.5"/>
+  <!-- Checklist icon large -->
+  <rect x="480" y="70" width="140" height="160" rx="12" fill="#1e3a5f" stroke="#2563eb" stroke-width="2"/>
+  <rect x="500" y="95" width="20" height="20" rx="4" fill="#22c55e"/>
+  <path d="M505 105 L510 110 L518 98" stroke="#fff" stroke-width="2" fill="none"/>
+  <rect x="530" y="100" width="70" height="6" rx="3" fill="#94a3b8"/>
+  <rect x="500" y="130" width="20" height="20" rx="4" fill="#22c55e"/>
+  <path d="M505 140 L510 145 L518 133" stroke="#fff" stroke-width="2" fill="none"/>
+  <rect x="530" y="135" width="60" height="6" rx="3" fill="#94a3b8"/>
+  <rect x="500" y="165" width="20" height="20" rx="4" fill="#334155" stroke="#64748b"/>
+  <rect x="530" y="170" width="75" height="6" rx="3" fill="#64748b"/>
+  <rect x="500" y="200" width="20" height="20" rx="4" fill="#334155" stroke="#64748b"/>
+  <rect x="530" y="205" width="65" height="6" rx="3" fill="#64748b"/>
+</svg>

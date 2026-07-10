@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign in | TaskFlow</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="login-page">
+    <div class="login-layout">
+        <aside class="login-visual">
+            <img src="{{ url_for('static', filename='images/login-bg.jpg') }}" alt="" class="login-visual-img">
+            <div class="login-visual-overlay">
+                <div class="login-visual-content">
+                    <div class="brand-lockup brand-lockup--light">
+                        <div class="logo-mark">TF</div>
+                        <span class="brand-name">TaskFlow</span>
+                    </div>
+                    <h2>Manage tasks.<br>Empower your team.</h2>
+                    <p>Enterprise task management built with Python, MySQL, and modern web standards.</p>
+                    <div class="trust-badges">
+                        <span class="trust-badge">Secure Login</span>
+                        <span class="trust-badge">MySQL Backend</span>
+                        <span class="trust-badge">Real-time Sync</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <main class="login-form-side">
+            <div class="login-form-wrap">
+                <div class="brand-lockup brand-lockup--sm">
+                    <div class="logo-mark">TF</div>
+                    <span class="brand-name">TaskFlow</span>
+                </div>
+
+                <div class="login-card">
+                    <div class="login-card-top">
+                        <h2>Welcome back</h2>
+                        <p class="subtitle">Sign in to your workspace</p>
+                    </div>
+
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                    <div class="flash-messages">
+                        {% for category, message in messages %}
+                        <div class="flash flash-{{ category }}">{{ message }}</div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    {% endwith %}
+
+                    <form method="POST" action="{{ url_for('login') }}" class="login-form">
+                        <div class="form-group">
+                            <label for="username">Username</label>
+                            <input type="text" id="username" name="username" placeholder="Enter username" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="password">Password</label>
+                            <input type="password" id="password" name="password" placeholder="Enter password" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="role">Role</label>
+                            <select id="role" name="role" required>
+                                <option value="Admin">Admin</option>
+                                <option value="Manager" selected>Manager</option>
+                            </select>
+                            <p class="field-hint"><strong>admin</strong> → Admin · <strong>manager</strong> → Manager</p>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-full">Continue</button>
+                    </form>
+
+                    <div class="demo-box">
+                        <p class="demo-box-title">Demo credentials</p>
+                        <div class="demo-rows">
+                            <div class="demo-row"><span>Admin</span><code>admin / admin123</code></div>
+                            <div class="demo-row"><span>Manager</span><code>manager / manager123</code></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

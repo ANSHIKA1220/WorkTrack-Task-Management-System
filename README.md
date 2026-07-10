@@ -381,23 +381,28 @@ Ctrl + C
 
 ## Login Page
 
-(Add Screenshot Here)
+<img width="1920" height="912" alt="image" src="https://github.com/user-attachments/assets/e127dfbc-e5fa-401f-bb81-b28d74424d65" />
+
 
 ## Dashboard
 
-(Add Screenshot Here)
+<img width="1920" height="1077" alt="image" src="https://github.com/user-attachments/assets/4cabf8ba-4709-438d-ac07-049964b8b214" />
+
 
 ## Employee Directory
 
-(Add Screenshot Here)
+<img width="1920" height="1080" alt="Screenshot 2026-07-10 104702" src="https://github.com/user-attachments/assets/042f3ff5-b20d-4c13-b35f-4292fb317cb3" />
+
 
 ## Reports
 
-(Add Screenshot Here)
+<img width="1920" height="1419" alt="image" src="https://github.com/user-attachments/assets/37ac18b3-ad81-40b3-8218-5d95c002eed3" />
+
 
 ## Task Assignment
 
-(Add Screenshot Here)
+<img width="1920" height="1080" alt="Screenshot 2026-07-10 104726" src="https://github.com/user-attachments/assets/6ae111fd-ecb3-4c16-9b32-e9382a0bb48b" />
+
 
 ---
 

@@ -1,6 +1,6 @@
 """MySQL database connection."""
 
-from datetime import datetime
+from datetime import date, datetime
 
 import mysql.connector
 
@@ -44,6 +44,22 @@ def format_created_at(value):
     if isinstance(value, datetime):
         return value.strftime("%Y-%m-%d %H:%M")
     return str(value)[:16]
+
+
+def format_date(value):
+    if not value:
+        return None
+    if isinstance(value, date):
+        return value.isoformat()
+    return str(value)[:10]
+
+
+def task_columns(conn):
+    cursor = conn.cursor()
+    cursor.execute("SHOW COLUMNS FROM tasks")
+    columns = {row[0] for row in cursor.fetchall()}
+    cursor.close()
+    return columns
 
 
 def renumber_tasks(conn):

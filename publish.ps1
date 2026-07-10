@@ -1,4 +1,4 @@
-# Publish Task Management System to GitHub
+# Publish WorkTrack to GitHub
 # Run in PowerShell from this folder after: gh auth login
 
 $ErrorActionPreference = "Stop"
@@ -19,7 +19,7 @@ if ($LASTEXITCODE -ne 0) {
 
 $repoName = "task-management-system"
 Write-Host "Creating public repo: $repoName"
-gh repo create $repoName --public --source=. --remote=origin --push --description "College Task Management System - Flask, MySQL, HTML/CSS/JS"
+gh repo create $repoName --public --source=. --remote=origin --push --description "WorkTrack - Flask and MySQL task management system"
 
 if ($LASTEXITCODE -eq 0) {
     gh repo view --web

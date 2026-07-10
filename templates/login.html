@@ -3,83 +3,89 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sign in | TaskFlow</title>
+    <title>Sign in | WorkTrack</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body class="login-page">
-    <div class="login-layout">
-        <aside class="login-visual">
-            <img src="{{ url_for('static', filename='images/login-bg.jpg') }}" alt="" class="login-visual-img">
-            <div class="login-visual-overlay">
-                <div class="login-visual-content">
-                    <div class="brand-lockup brand-lockup--light">
-                        <div class="logo-mark">TF</div>
-                        <span class="brand-name">TaskFlow</span>
-                    </div>
-                    <h2>Manage tasks.<br>Empower your team.</h2>
-                    <p>Enterprise task management built with Python, MySQL, and modern web standards.</p>
-                    <div class="trust-badges">
-                        <span class="trust-badge">Secure Login</span>
-                        <span class="trust-badge">MySQL Backend</span>
-                        <span class="trust-badge">Real-time Sync</span>
-                    </div>
-                </div>
+    <main class="login-shell">
+        <section class="login-brand-panel">
+            <div class="brand-lockup brand-lockup--light">
+                <div class="logo-mark">WT</div>
+                <span class="brand-name">WorkTrack</span>
             </div>
-        </aside>
+            <div class="login-brand-copy">
+                <p class="eyebrow">Assign. Track. Complete.</p>
+                <h1>Team tasks without the spreadsheet clutter.</h1>
+                <p>Employee task management powered by Python, MySQL, and modern web technologies.</p>
+            </div>
+            <div class="login-proof-grid">
+                <span>Role-based access</span>
+                <span>MySQL reports</span>
+                <span>Session login</span>
+            </div>
+        </section>
 
-        <main class="login-form-side">
-            <div class="login-form-wrap">
-                <div class="brand-lockup brand-lockup--sm">
-                    <div class="logo-mark">TF</div>
-                    <span class="brand-name">TaskFlow</span>
+        <section class="login-card-wrap">
+            <div class="login-card">
+                <div class="brand-lockup mobile-brand">
+                    <div class="logo-mark">WT</div>
+                    <span class="brand-name">WorkTrack</span>
+                </div>
+                <div class="login-card-top">
+                    <h2>Welcome back</h2>
+                    <p class="subtitle">Sign in to open your workspace.</p>
                 </div>
 
-                <div class="login-card">
-                    <div class="login-card-top">
-                        <h2>Welcome back</h2>
-                        <p class="subtitle">Sign in to your workspace</p>
-                    </div>
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                <div class="flash-messages">
+                    {% for category, message in messages %}
+                    <div class="flash flash-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                {% endwith %}
 
-                    {% with messages = get_flashed_messages(with_categories=true) %}
-                    {% if messages %}
-                    <div class="flash-messages">
-                        {% for category, message in messages %}
-                        <div class="flash flash-{{ category }}">{{ message }}</div>
-                        {% endfor %}
+                <form method="POST" action="{{ url_for('login') }}" class="login-form" id="loginForm">
+                    <div class="form-group">
+                        <label for="username">Username</label>
+                        <input type="text" id="username" name="username" placeholder="admin or manager" required>
                     </div>
-                    {% endif %}
-                    {% endwith %}
-
-                    <form method="POST" action="{{ url_for('login') }}" class="login-form">
-                        <div class="form-group">
-                            <label for="username">Username</label>
-                            <input type="text" id="username" name="username" placeholder="Enter username" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="password">Password</label>
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <div class="password-field">
                             <input type="password" id="password" name="password" placeholder="Enter password" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="role">Role</label>
-                            <select id="role" name="role" required>
-                                <option value="Admin">Admin</option>
-                                <option value="Manager" selected>Manager</option>
-                            </select>
-                            <p class="field-hint"><strong>admin</strong> → Admin · <strong>manager</strong> → Manager</p>
-                        </div>
-                        <button type="submit" class="btn btn-primary btn-full">Continue</button>
-                    </form>
-
-                    <div class="demo-box">
-                        <p class="demo-box-title">Demo credentials</p>
-                        <div class="demo-rows">
-                            <div class="demo-row"><span>Admin</span><code>admin / admin123</code></div>
-                            <div class="demo-row"><span>Manager</span><code>manager / manager123</code></div>
+                            <button type="button" id="togglePassword" aria-label="Show password">Show</button>
                         </div>
                     </div>
+                    <div class="form-group">
+                        <label for="role">Role</label>
+                        <select id="role" name="role" required>
+                            <option value="Admin">Admin</option>
+                            <option value="Manager" selected>Manager</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-full">Sign in</button>
+                </form>
+
+                <div class="demo-box">
+                    <p class="demo-box-title">Demo credentials</p>
+                    <div class="demo-row"><span>Admin</span><code>admin / admin123</code></div>
+                    <div class="demo-row"><span>Manager</span><code>manager / manager123</code></div>
                 </div>
             </div>
-        </main>
-    </div>
+        </section>
+    </main>
+    <script>
+        document.querySelectorAll(".flash").forEach((el) => setTimeout(() => el.remove(), 4500));
+        const toggle = document.getElementById("togglePassword");
+        const password = document.getElementById("password");
+        toggle.addEventListener("click", () => {
+            const hidden = password.type === "password";
+            password.type = hidden ? "text" : "password";
+            toggle.textContent = hidden ? "Hide" : "Show";
+            toggle.setAttribute("aria-label", hidden ? "Hide password" : "Show password");
+        });
+    </script>
 </body>
 </html>

@@ -1,4 +1,4 @@
-"""Initialize MySQL database with schema and default users."""
+"""Initialize WorkTrack MySQL database with schema and default users."""
 
 import sys
 
@@ -7,6 +7,7 @@ from werkzeug.security import generate_password_hash
 
 from config import DB_CONFIG
 from database.employee_names import generate_alphabet_names
+from migrate import migrate
 
 USERS = [
     ("admin", "admin123", "Admin"),
@@ -77,6 +78,10 @@ def setup():
     conn.commit()
     conn.database = DB_CONFIG["database"]
     cursor = conn.cursor()
+    cursor.close()
+
+    migrate()
+    cursor = conn.cursor()
 
     for username, plain, role in USERS:
         cursor.execute(
@@ -94,7 +99,7 @@ def setup():
     cursor.close()
     conn.close()
 
-    print("\nMySQL database setup complete.")
+    print("\nWorkTrack MySQL database setup complete.")
     print("Login: admin / admin123  OR  manager / manager123")
     print("\nNext step: python app.py")
 

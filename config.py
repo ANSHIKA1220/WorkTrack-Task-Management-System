@@ -29,15 +29,18 @@ DB_CONFIG = {
     "database": os.environ.get("MYSQL_DATABASE", "task_management"),
 }
 
-SECRET_KEY = "task-mgmt-secret-key-change-in-production"
+SECRET_KEY = os.environ.get("SECRET_KEY", "worktrack-dev-secret-change-me")
 
 TASK_TITLE_OPTIONS = [
     "Documentation",
     "Code Review",
     "Bug Fix",
+    "Development",
     "Feature Development",
     "Testing",
-    "Client Meeting",
+    "Database Update",
+    "Client Follow-up",
+    "UI Design",
     "Training",
     "Deployment",
 ]

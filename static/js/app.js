@@ -1,691 +1,490 @@
 document.addEventListener("DOMContentLoaded", () => {
-    const taskForm = document.getElementById("taskForm");
-    const tasksBody = document.getElementById("tasksBody");
-    const formMessage = document.getElementById("formMessage");
-    const employeeInput = document.getElementById("employeeInput");
-    const employeeId = document.getElementById("employee_id");
-    const employeeList = document.getElementById("employeeList");
-    const employeeClear = document.getElementById("employeeClear");
-    const employeeCombobox = document.getElementById("employeeCombobox");
-    const employeeCountHint = document.getElementById("employeeCountHint");
-    const submitBtn = document.getElementById("submitBtn");
-    const addEmployeeForm = document.getElementById("addEmployeeForm");
-    const addEmployeeMessage = document.getElementById("addEmployeeMessage");
+    const state = {
+        role: document.body.dataset.role || "Manager",
+        employees: [],
+        tasks: [],
+        users: [],
+        report: null,
+        editingTaskId: null,
+    };
 
-    let editingTaskId = null;
-    let allEmployees = [];
-    let allTasks = [];
-    let activeIndex = -1;
-    let addEmployeeMessageTimer = null;
-    let formMessageTimer = null;
+    const canAdmin = state.role === "Admin";
+    const $ = (id) => document.getElementById(id);
 
-    loadEmployees();
-    loadTasks();
-    initEmployeeCombobox();
-    initAddEmployeeForm();
-    initSidebarNav();
-    initEmployeeSearch();
+    initShell();
+    initForms();
+    loadAll();
 
-    function initSidebarNav() {
-        const links = document.querySelectorAll(".sidebar-link[data-panel]");
-        const panels = document.querySelectorAll(".panel");
-        const heroTitle = document.querySelector(".page-title");
-        const heroDesc = document.querySelector(".page-desc");
+    function initShell() {
+        $("todayLabel").textContent = new Date().toLocaleDateString(undefined, {
+            weekday: "short",
+            day: "numeric",
+            month: "short",
+            year: "numeric",
+        });
 
-        const panelMeta = {
-            dashboard: {
-                title: `Good day, ${document.querySelector(".sidebar-user-name")?.textContent || "there"}`,
-                desc: "Assign tasks, manage employees, track completion.",
-            },
-            employees: {
-                title: "Employee Directory",
-                desc: "Add team members and browse the full employee list.",
-            },
-            reports: {
-                title: "Reports & Analytics",
-                desc: "Task completion stats and breakdown by type.",
-            },
-        };
+        document.querySelectorAll(".flash").forEach((el) => setTimeout(() => el.remove(), 4500));
+        $("mobileMenuBtn")?.addEventListener("click", () => $("sidebar").classList.toggle("sidebar--open"));
 
-        function showPanel(name) {
-            links.forEach((link) => {
-                link.classList.toggle("sidebar-link--active", link.dataset.panel === name);
-            });
-            panels.forEach((panel) => {
-                panel.classList.toggle("panel--active", panel.id === `panel-${name}`);
-            });
-
-            const metricsGrid = document.querySelector(".main-content > .metrics-grid");
-            if (metricsGrid) {
-                metricsGrid.style.display = name === "dashboard" ? "" : "none";
-            }
-
-            const meta = panelMeta[name];
-            if (meta && heroTitle && heroDesc) {
-                heroTitle.textContent = meta.title;
-                heroDesc.textContent = meta.desc;
-            }
-
-            if (name === "employees") renderEmployeeList();
-            if (name === "reports") renderReports();
-        }
-
-        links.forEach((link) => {
-            link.addEventListener("click", (e) => {
-                e.preventDefault();
+        document.querySelectorAll(".sidebar-link[data-panel]").forEach((link) => {
+            link.addEventListener("click", (event) => {
+                event.preventDefault();
                 showPanel(link.dataset.panel);
-                history.replaceState(null, "", `#${link.dataset.panel}`);
             });
+        });
+
+        document.querySelectorAll("[data-panel-jump]").forEach((button) => {
+            button.addEventListener("click", () => showPanel(button.dataset.panelJump));
         });
 
         const hash = location.hash.replace("#", "");
-        if (hash && panelMeta[hash]) {
-            showPanel(hash);
-        }
+        if (hash) showPanel(hash);
     }
 
-    function initEmployeeSearch() {
-        const search = document.getElementById("employeeSearch");
-        if (!search) return;
-        search.addEventListener("input", () => renderEmployeeList(search.value.trim()));
-    }
+    function showPanel(name) {
+        const link = document.querySelector(`.sidebar-link[data-panel="${name}"]`);
+        const panel = $(`panel-${name}`);
+        if (!link || !panel) return;
 
-    function renderEmployeeList(filter = "") {
-        const body = document.getElementById("employeeListBody");
-        const countEl = document.getElementById("employeeListCount");
-        if (!body) return;
-
-        const q = filter.toLowerCase();
-        const filtered = q
-            ? allEmployees.filter((e) => e.employee_name.toLowerCase().includes(q))
-            : allEmployees;
-
-        if (countEl) {
-            countEl.textContent = filter
-                ? `${filtered.length} of ${allEmployees.length} employees`
-                : `${allEmployees.length} employees in directory`;
-        }
-
-        if (filtered.length === 0) {
-            body.innerHTML = `<tr><td colspan="2" class="empty-cell">${filter ? "No employees match your search." : "No employees yet — add one above."}</td></tr>`;
-            return;
-        }
-
-        body.innerHTML = filtered
-            .map(
-                (e) => `
-            <tr>
-                <td class="task-id">#${e.employee_id}</td>
-                <td>
-                    <div class="emp-cell">
-                        <span class="emp-avatar">${getInitials(e.employee_name)}</span>
-                        <span>${escapeHtml(e.employee_name)}</span>
-                    </div>
-                </td>
-            </tr>`
-            )
-            .join("");
-    }
-
-    function renderReports() {
-        const completionEl = document.getElementById("reportCompletion");
-        const employeesEl = document.getElementById("reportEmployees");
-        const avgEl = document.getElementById("reportAvgTasks");
-        const body = document.getElementById("reportBody");
-        if (!body) return;
-
-        const total = allTasks.length;
-        const done = allTasks.filter((t) => t.completed).length;
-        const rate = total ? Math.round((done / total) * 100) : 0;
-
-        if (completionEl) completionEl.textContent = `${rate}%`;
-        if (employeesEl) employeesEl.textContent = allEmployees.length;
-        if (avgEl) {
-            avgEl.textContent = allEmployees.length
-                ? (total / allEmployees.length).toFixed(1)
-                : "0";
-        }
-
-        const byType = {};
-        allTasks.forEach((t) => {
-            if (!byType[t.task_title]) {
-                byType[t.task_title] = { total: 0, done: 0, pending: 0 };
-            }
-            byType[t.task_title].total++;
-            if (t.completed) byType[t.task_title].done++;
-            else byType[t.task_title].pending++;
+        document.querySelectorAll(".sidebar-link").forEach((item) => {
+            item.classList.toggle("sidebar-link--active", item.dataset.panel === name);
         });
+        document.querySelectorAll(".panel").forEach((item) => {
+            item.classList.toggle("panel--active", item.id === `panel-${name}`);
+        });
+        $("sidebar").classList.remove("sidebar--open");
+        history.replaceState(null, "", `#${name}`);
 
-        const types = Object.keys(byType).sort();
-        if (types.length === 0) {
-            body.innerHTML = '<tr><td colspan="4" class="empty-cell">No tasks yet — assign some from Dashboard.</td></tr>';
+        const titles = {
+            overview: [state.role === "Admin" ? "Admin Dashboard" : "Manager Dashboard", "Live task metrics and workload signals."],
+            employees: ["Employee Directory", "Search employees and review assignment counts."],
+            tasks: ["Assign Tasks", "Create tasks, filter work, and update status."],
+            reports: ["Reports", "Completion and workload analytics from MySQL."],
+            users: ["User Management", "Admin-only view of login accounts."],
+        };
+        const meta = titles[name] || titles.overview;
+        $("pageTitle").textContent = meta[0];
+        $("pageDesc").textContent = meta[1];
+    }
+
+    function initForms() {
+        $("addEmployeeForm")?.addEventListener("submit", addEmployee);
+        $("taskForm")?.addEventListener("submit", saveTask);
+        $("taskForm")?.addEventListener("reset", resetTaskForm);
+        $("employeeSearch")?.addEventListener("input", renderEmployees);
+        ["taskSearch", "statusFilter", "typeFilter", "employeeFilter"].forEach((id) => {
+            $(id)?.addEventListener("input", renderTasks);
+            $(id)?.addEventListener("change", renderTasks);
+        });
+        initEmployeeCombobox();
+    }
+
+    async function loadAll() {
+        await Promise.all([loadEmployees(), loadTasks(), loadReport(), canAdmin ? loadUsers() : Promise.resolve()]);
+    }
+
+    async function loadEmployees() {
+        const res = await fetchJson("/api/employees");
+        state.employees = res || [];
+        renderEmployees();
+        refreshEmployeeOptions();
+    }
+
+    async function loadTasks() {
+        const res = await fetchJson("/api/tasks");
+        state.tasks = res || [];
+        updateStats();
+        renderRecentTasks();
+        renderTasks();
+    }
+
+    async function loadReport() {
+        state.report = await fetchJson("/api/reports");
+        renderReport();
+    }
+
+    async function loadUsers() {
+        state.users = await fetchJson("/api/users") || [];
+        renderUsers();
+    }
+
+    async function fetchJson(url, options = {}) {
+        try {
+            const res = await fetch(url, options);
+            const data = await res.json();
+            if (!res.ok) {
+                showToast($("formMessage"), data.error || "Request failed.", "error");
+                return null;
+            }
+            return data;
+        } catch {
+            showToast($("formMessage"), "Network error. Is the server running?", "error");
+            return null;
+        }
+    }
+
+    function updateStats() {
+        const total = state.tasks.length;
+        const done = state.tasks.filter((task) => task.completed).length;
+        const pending = total - done;
+        const rate = total ? Math.round((done / total) * 100) : 0;
+        $("statTotal").textContent = total;
+        $("statPending").textContent = pending;
+        $("statDone").textContent = done;
+        $("statRate").textContent = `${rate}%`;
+        $("progressLabel").textContent = `${rate}%`;
+        $("progressBar").style.width = `${rate}%`;
+    }
+
+    function renderRecentTasks() {
+        const body = $("recentTasksBody");
+        const rows = state.tasks.slice(0, 6);
+        if (!rows.length) {
+            body.innerHTML = '<tr><td colspan="5" class="empty-cell">No tasks yet. Assign one from the Tasks page.</td></tr>';
+            return;
+        }
+        body.innerHTML = rows.map((task) => `
+            <tr>
+                <td class="task-id">#${task.task_id}</td>
+                <td>${employeeCell(task.employee_name)}</td>
+                <td>${escapeHtml(task.task_title)}</td>
+                <td>${statusBadge(task.completed)}</td>
+                <td>${task.due_date || "-"}</td>
+            </tr>
+        `).join("");
+    }
+
+    function renderEmployees() {
+        const body = $("employeeListBody");
+        const query = ($("employeeSearch")?.value || "").toLowerCase();
+        const employees = state.employees.filter((employee) => employee.employee_name.toLowerCase().includes(query));
+        $("employeeListCount").textContent = `${employees.length} of ${state.employees.length} employees shown`;
+
+        if (!employees.length) {
+            body.innerHTML = `<tr><td colspan="${canAdmin ? 5 : 4}" class="empty-cell">No employees match your search.</td></tr>`;
             return;
         }
 
-        body.innerHTML = types
-            .map(
-                (type) => {
-                    const row = byType[type];
-                    return `
-                <tr>
-                    <td>${escapeHtml(type)}</td>
-                    <td>${row.total}</td>
-                    <td><span class="status-pill status-done">${row.done}</span></td>
-                    <td><span class="status-pill status-pending">${row.pending}</span></td>
-                </tr>`;
-                }
-            )
-            .join("");
+        body.innerHTML = employees.map((employee) => `
+            <tr>
+                <td>${employeeCell(employee.employee_name)}</td>
+                <td>${employee.task_count || 0}</td>
+                <td><span class="status-pill status-done">${employee.completed_count || 0}</span></td>
+                <td><span class="status-pill status-pending">${employee.pending_count || 0}</span></td>
+                ${canAdmin ? `<td class="action-cell">
+                    <button class="btn-small" data-edit-employee="${employee.employee_id}">Edit</button>
+                    <button class="btn-small btn-danger" data-delete-employee="${employee.employee_id}">Delete</button>
+                </td>` : ""}
+            </tr>
+        `).join("");
+
+        body.querySelectorAll("[data-edit-employee]").forEach((button) => {
+            button.addEventListener("click", () => editEmployee(button.dataset.editEmployee));
+        });
+        body.querySelectorAll("[data-delete-employee]").forEach((button) => {
+            button.addEventListener("click", () => deleteEmployee(button.dataset.deleteEmployee));
+        });
     }
 
-    async function addEmployeeByName(rawName, { selectInTaskForm = false, showInAddPanel = false } = {}) {
-        const name = rawName.trim();
-        if (name.length < 2) {
-            return { ok: false, error: "Name must be at least 2 characters." };
+    function refreshEmployeeOptions() {
+        const employeeFilter = $("employeeFilter");
+        const typeFilter = $("typeFilter");
+        if (employeeFilter) {
+            const current = employeeFilter.value;
+            employeeFilter.innerHTML = '<option value="">All employees</option>' + state.employees
+                .map((employee) => `<option value="${employee.employee_id}">${escapeHtml(employee.employee_name)}</option>`)
+                .join("");
+            employeeFilter.value = current;
+        }
+        if (typeFilter) {
+            const types = [...new Set(state.tasks.map((task) => task.task_title))].sort();
+            const current = typeFilter.value;
+            typeFilter.innerHTML = '<option value="">All types</option>' + types
+                .map((type) => `<option value="${escapeHtml(type)}">${escapeHtml(type)}</option>`)
+                .join("");
+            typeFilter.value = current;
+        }
+        $("employeeCountHint").textContent = `${state.employees.length} employees available`;
+    }
+
+    function renderTasks() {
+        const body = $("tasksBody");
+        let tasks = [...state.tasks];
+        const query = ($("taskSearch")?.value || "").toLowerCase();
+        const status = $("statusFilter")?.value || "";
+        const type = $("typeFilter")?.value || "";
+        const employeeId = $("employeeFilter")?.value || "";
+
+        if (query) {
+            tasks = tasks.filter((task) =>
+                task.employee_name.toLowerCase().includes(query) ||
+                task.task_title.toLowerCase().includes(query) ||
+                (task.task_description || "").toLowerCase().includes(query)
+            );
+        }
+        if (status) tasks = tasks.filter((task) => status === "completed" ? task.completed : !task.completed);
+        if (type) tasks = tasks.filter((task) => task.task_title === type);
+        if (employeeId) tasks = tasks.filter((task) => String(task.employee_id) === employeeId);
+
+        if (!tasks.length) {
+            body.innerHTML = '<tr><td colspan="6" class="empty-cell">No tasks found.</td></tr>';
+            return;
         }
 
-        const res = await fetch("/api/employees", {
+        body.innerHTML = tasks.map((task) => `
+            <tr>
+                <td class="task-id">#${task.task_id}</td>
+                <td>${employeeCell(task.employee_name)}</td>
+                <td><strong>${escapeHtml(task.task_title)}</strong><small>${escapeHtml(task.task_description || "")}</small></td>
+                <td>${statusBadge(task.completed)}</td>
+                <td>${task.due_date || "-"}</td>
+                <td class="action-cell">
+                    ${canAdmin ? `<button class="btn-small" data-edit-task="${task.task_id}">Edit</button>` : ""}
+                    <button class="btn-small" data-toggle-task="${task.task_id}">${task.completed ? "Mark Pending" : "Complete"}</button>
+                    ${canAdmin ? `<button class="btn-small btn-danger" data-delete-task="${task.task_id}">Delete</button>` : ""}
+                </td>
+            </tr>
+        `).join("");
+
+        body.querySelectorAll("[data-edit-task]").forEach((button) => {
+            button.addEventListener("click", () => editTask(button.dataset.editTask));
+        });
+        body.querySelectorAll("[data-toggle-task]").forEach((button) => {
+            button.addEventListener("click", () => toggleTask(button.dataset.toggleTask));
+        });
+        body.querySelectorAll("[data-delete-task]").forEach((button) => {
+            button.addEventListener("click", () => deleteTask(button.dataset.deleteTask));
+        });
+    }
+
+    function renderReport() {
+        const report = state.report;
+        if (!report) return;
+        $("reportCompletion").textContent = `${report.completion_rate}%`;
+        $("reportProgressBar").style.width = `${report.completion_rate}%`;
+        $("reportSummary").textContent = `${report.completed_tasks} completed, ${report.pending_tasks} pending, ${report.avg_tasks_per_employee} average tasks per employee.`;
+
+        $("reportTypeBody").innerHTML = report.by_type.length ? report.by_type.map((row) => `
+            <tr><td>${escapeHtml(row.task_title)}</td><td>${row.total}</td><td>${row.completed}</td><td>${row.pending}</td></tr>
+        `).join("") : '<tr><td colspan="4" class="empty-cell">No task type data yet.</td></tr>';
+
+        $("reportWorkloadBody").innerHTML = report.workload.length ? report.workload.map((row) => `
+            <tr><td>${employeeCell(row.employee_name)}</td><td>${row.total}</td><td>${row.completed}</td><td>${row.pending}</td></tr>
+        `).join("") : '<tr><td colspan="4" class="empty-cell">No workload data yet.</td></tr>';
+
+        $("workloadList").innerHTML = report.workload.length ? report.workload.slice(0, 5).map((row) => `
+            <div class="workload-item"><span>${escapeHtml(row.employee_name)}</span><strong>${row.total}</strong></div>
+        `).join("") : '<p class="muted">No assigned tasks yet.</p>';
+    }
+
+    function renderUsers() {
+        const body = $("usersBody");
+        if (!body) return;
+        body.innerHTML = state.users.map((user) => `
+            <tr><td class="task-id">#${user.user_id}</td><td>${escapeHtml(user.username)}</td><td><span class="role-tag role-${user.role.toLowerCase()}">${escapeHtml(user.role)}</span></td></tr>
+        `).join("");
+    }
+
+    async function addEmployee(event) {
+        event.preventDefault();
+        const input = $("newEmployeeName");
+        const name = input.value.trim();
+        if (name.length < 2) {
+            showToast($("addEmployeeMessage"), "Employee name must be at least 2 characters.", "error");
+            return;
+        }
+        const data = await fetchJson("/api/employees", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ employee_name: name }),
         });
-        const data = await res.json();
-
-        if (!res.ok) {
-            return { ok: false, error: data.error || "Could not add employee." };
-        }
-
+        if (!data) return;
+        showToast($("addEmployeeMessage"), data.message, "success");
+        input.value = "";
         await loadEmployees();
-
-        if (selectInTaskForm) {
-            employeeId.value = data.employee_id;
-            employeeInput.value = data.employee_name;
-            employeeClear.classList.remove("hidden");
-            employeeCombobox.classList.add("combobox--selected");
-            closeList();
-        }
-
-        if (showInAddPanel) {
-            showAddEmployeeMessage(data.message, "success");
-        }
-
-        return { ok: true, data };
     }
 
-    function initAddEmployeeForm() {
-        if (!addEmployeeForm) return;
-
-        addEmployeeForm.addEventListener("submit", async (e) => {
-            e.preventDefault();
-            const nameInput = document.getElementById("newEmployeeName");
-            const btn = document.getElementById("addEmployeeBtn");
-
-            btn.disabled = true;
-            btn.textContent = "Adding...";
-            hideAddEmployeeMessage();
-
-            try {
-                const result = await addEmployeeByName(nameInput.value, {
-                    selectInTaskForm: false,
-                    showInAddPanel: true,
-                });
-                if (!result.ok) {
-                    showAddEmployeeMessage(result.error, "error");
-                    return;
-                }
-                nameInput.value = "";
-                clearSelection(true);
-            } catch {
-                showAddEmployeeMessage("Network error. Is the server running?", "error");
-            } finally {
-                btn.disabled = false;
-                btn.textContent = "Add Employee";
-            }
+    async function editEmployee(id) {
+        const employee = state.employees.find((item) => String(item.employee_id) === String(id));
+        const nextName = prompt("Update employee name", employee?.employee_name || "");
+        if (!nextName) return;
+        const data = await fetchJson(`/api/employees/${id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ employee_name: nextName }),
         });
-    }
-
-    function showAddEmployeeMessage(text, type) {
-        if (!addEmployeeMessage) return;
-        if (addEmployeeMessageTimer) {
-            clearTimeout(addEmployeeMessageTimer);
-            addEmployeeMessageTimer = null;
-        }
-        addEmployeeMessage.textContent = text;
-        addEmployeeMessage.className = `toast toast--${type}`;
-
-        if (type === "success") {
-            addEmployeeMessageTimer = setTimeout(() => {
-                hideAddEmployeeMessage();
-                addEmployeeMessageTimer = null;
-            }, 2000);
+        if (data) {
+            showToast($("addEmployeeMessage"), data.message, "success");
+            await loadEmployees();
+            await loadReport();
         }
     }
 
-    function hideAddEmployeeMessage() {
-        if (!addEmployeeMessage) return;
-        if (addEmployeeMessageTimer) {
-            clearTimeout(addEmployeeMessageTimer);
-            addEmployeeMessageTimer = null;
+    async function deleteEmployee(id) {
+        const employee = state.employees.find((item) => String(item.employee_id) === String(id));
+        if (!confirm(`Delete ${employee?.employee_name || "this employee"}?\n\nThis only works when no tasks are assigned.`)) return;
+        const data = await fetchJson(`/api/employees/${id}`, { method: "DELETE" });
+        if (data) {
+            showToast($("addEmployeeMessage"), data.message, "success");
+            await loadEmployees();
+            await loadReport();
         }
-        addEmployeeMessage.className = "toast toast--hidden";
+    }
+
+    async function saveTask(event) {
+        event.preventDefault();
+        if (!$("employee_id").value) {
+            showToast($("formMessage"), "Please select an employee.", "error");
+            return;
+        }
+        const payload = {
+            employee_id: $("employee_id").value,
+            task_title: $("task_title").value,
+            task_description: $("task_description").value.trim(),
+            due_date: $("due_date").value,
+            completed: $("completed").value === "true",
+        };
+        const url = state.editingTaskId ? `/api/tasks/${state.editingTaskId}` : "/api/tasks";
+        const method = state.editingTaskId ? "PUT" : "POST";
+        const data = await fetchJson(url, {
+            method,
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+        });
+        if (!data) return;
+        showToast($("formMessage"), data.message, "success");
+        resetTaskForm();
+        await loadTasks();
+        await loadEmployees();
+        await loadReport();
+        refreshEmployeeOptions();
+    }
+
+    function editTask(id) {
+        const task = state.tasks.find((item) => String(item.task_id) === String(id));
+        if (!task) return;
+        state.editingTaskId = id;
+        $("taskFormTitle").textContent = `Edit Task #${id}`;
+        $("submitBtn").textContent = "Update Task";
+        $("employee_id").value = task.employee_id;
+        $("employeeInput").value = task.employee_name;
+        $("employeeClear").classList.remove("hidden");
+        $("task_title").value = task.task_title;
+        $("task_description").value = task.task_description || "";
+        $("due_date").value = task.due_date || "";
+        $("completed").value = String(Boolean(task.completed));
+        document.querySelector("#panel-tasks .card").scrollIntoView({ behavior: "smooth" });
+    }
+
+    async function toggleTask(id) {
+        const task = state.tasks.find((item) => String(item.task_id) === String(id));
+        if (!task) return;
+        const payload = canAdmin
+            ? { ...task, completed: !task.completed }
+            : { completed: !task.completed };
+        const data = await fetchJson(`/api/tasks/${id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+        });
+        if (data) {
+            await loadTasks();
+            await loadEmployees();
+            await loadReport();
+        }
+    }
+
+    async function deleteTask(id) {
+        if (!confirm(`Delete Task #${id}? This cannot be undone.`)) return;
+        const data = await fetchJson(`/api/tasks/${id}`, { method: "DELETE" });
+        if (data) {
+            showToast($("formMessage"), data.message, "success");
+            await loadTasks();
+            await loadEmployees();
+            await loadReport();
+        }
+    }
+
+    function resetTaskForm() {
+        state.editingTaskId = null;
+        $("taskForm").reset();
+        $("taskFormTitle").textContent = "Assign Task";
+        $("submitBtn").textContent = "Assign Task";
+        $("employee_id").value = "";
+        $("employeeInput").value = "";
+        $("employeeClear").classList.add("hidden");
     }
 
     function initEmployeeCombobox() {
-        employeeInput.addEventListener("input", () => {
-            clearSelection(false);
-            openList(employeeInput.value.trim());
+        const input = $("employeeInput");
+        const hidden = $("employee_id");
+        const list = $("employeeList");
+        const clear = $("employeeClear");
+        if (!input || !list) return;
+
+        input.addEventListener("input", () => {
+            hidden.value = "";
+            renderEmployeeChoices(input.value);
         });
-
-        employeeInput.addEventListener("focus", () => {
-            openList(employeeInput.value.trim());
+        input.addEventListener("focus", () => renderEmployeeChoices(input.value));
+        clear.addEventListener("click", () => {
+            input.value = "";
+            hidden.value = "";
+            clear.classList.add("hidden");
+            list.classList.add("hidden");
         });
-
-        employeeInput.addEventListener("keydown", async (e) => {
-            const items = employeeList.querySelectorAll(
-                ".combobox-item:not(.combobox-item--empty):not(.combobox-item--hint)"
-            );
-
-            if (e.key === "ArrowDown") {
-                e.preventDefault();
-                activeIndex = Math.min(activeIndex + 1, items.length - 1);
-                highlightItem(items);
-            } else if (e.key === "ArrowUp") {
-                e.preventDefault();
-                activeIndex = Math.max(activeIndex - 1, 0);
-                highlightItem(items);
-            } else if (e.key === "Enter") {
-                e.preventDefault();
-                if (activeIndex >= 0 && items[activeIndex]) {
-                    if (items[activeIndex].classList.contains("combobox-item--add")) {
-                        await handleInlineAdd(items[activeIndex].dataset.name);
-                    } else {
-                        selectEmployee(items[activeIndex]);
-                    }
-                } else {
-                    const query = employeeInput.value.trim();
-                    const exact = findExactMatch(query);
-                    if (exact) {
-                        selectEmployeeByData(exact.employee_id, exact.employee_name);
-                    } else if (query.length >= 2) {
-                        await handleInlineAdd(query);
-                    }
-                }
-            } else if (e.key === "Escape") {
-                closeList();
-            }
-        });
-
-        employeeClear.addEventListener("click", () => {
-            clearSelection(true);
-            employeeInput.focus();
-        });
-
-        document.addEventListener("click", (e) => {
-            if (!employeeCombobox.contains(e.target)) {
-                closeList();
-            }
+        document.addEventListener("click", (event) => {
+            if (!$("employeeCombobox").contains(event.target)) list.classList.add("hidden");
         });
     }
 
-    function findExactMatch(query) {
+    function renderEmployeeChoices(query) {
+        const list = $("employeeList");
         const q = query.toLowerCase();
-        return allEmployees.find((e) => e.employee_name.toLowerCase() === q);
-    }
-
-    function filterEmployees(query) {
-        if (!query) return allEmployees.slice(0, 10);
-        const q = query.toLowerCase();
-        return allEmployees
-            .filter((e) => e.employee_name.toLowerCase().includes(q))
-            .slice(0, 15);
-    }
-
-    function openList(query) {
-        activeIndex = -1;
-        employeeList.innerHTML = "";
-        const results = filterEmployees(query);
-
-        if (results.length === 0 && query.length >= 2) {
-            const addLi = document.createElement("li");
-            addLi.className = "combobox-item combobox-item--add";
-            addLi.role = "option";
-            addLi.dataset.name = query;
-            addLi.innerHTML = `<strong>+ Add</strong> "${escapeHtml(query)}" as new employee`;
-            addLi.addEventListener("mousedown", (e) => {
-                e.preventDefault();
-                handleInlineAdd(query);
-            });
-            employeeList.appendChild(addLi);
-        } else if (results.length === 0) {
-            employeeList.innerHTML =
-                '<li class="combobox-item combobox-item--empty">Type a name to search or add</li>';
+        const matches = state.employees
+            .filter((employee) => employee.employee_name.toLowerCase().includes(q))
+            .slice(0, 12);
+        if (!matches.length) {
+            list.innerHTML = '<li class="combobox-item combobox-item--empty">No employees found</li>';
         } else {
-            results.forEach((emp) => {
-                const li = document.createElement("li");
-                li.className = "combobox-item";
-                li.role = "option";
-                li.dataset.id = emp.employee_id;
-                li.dataset.name = emp.employee_name;
-                li.textContent = emp.employee_name;
-                li.addEventListener("mousedown", (e) => {
-                    e.preventDefault();
-                    selectEmployee(li);
+            list.innerHTML = matches.map((employee) => `
+                <li class="combobox-item" data-id="${employee.employee_id}" data-name="${escapeHtml(employee.employee_name)}">${escapeHtml(employee.employee_name)}</li>
+            `).join("");
+            list.querySelectorAll(".combobox-item[data-id]").forEach((item) => {
+                item.addEventListener("mousedown", (event) => {
+                    event.preventDefault();
+                    $("employee_id").value = item.dataset.id;
+                    $("employeeInput").value = item.dataset.name;
+                    $("employeeClear").classList.remove("hidden");
+                    list.classList.add("hidden");
                 });
-                employeeList.appendChild(li);
             });
-
-            if (query.length >= 2 && !findExactMatch(query)) {
-                const addLi = document.createElement("li");
-                addLi.className = "combobox-item combobox-item--add";
-                addLi.role = "option";
-                addLi.dataset.name = query;
-                addLi.innerHTML = `<strong>+ Add new:</strong> "${escapeHtml(query)}"`;
-                addLi.addEventListener("mousedown", (e) => {
-                    e.preventDefault();
-                    handleInlineAdd(query);
-                });
-                employeeList.appendChild(addLi);
-            }
         }
-
-        employeeList.classList.remove("hidden");
-        employeeCombobox.classList.add("combobox--open");
+        list.classList.remove("hidden");
     }
 
-    async function handleInlineAdd(name) {
-        try {
-            const result = await addEmployeeByName(name, { selectInTaskForm: true });
-            if (!result.ok) {
-                showMessage(result.error, "error");
-                return;
-            }
-            showMessage(result.data.message, "success");
-        } catch {
-            showMessage("Network error. Is the server running?", "error");
-        }
+    function employeeCell(name) {
+        return `<div class="emp-cell"><span class="emp-avatar">${initials(name)}</span><span>${escapeHtml(name)}</span></div>`;
     }
 
-    function closeList() {
-        employeeList.classList.add("hidden");
-        employeeCombobox.classList.remove("combobox--open");
-        activeIndex = -1;
+    function statusBadge(done) {
+        return `<span class="status-pill ${done ? "status-done" : "status-pending"}">${done ? "Completed" : "Pending"}</span>`;
     }
 
-    function highlightItem(items) {
-        items.forEach((item, i) => {
-            item.classList.toggle("combobox-item--active", i === activeIndex);
-        });
-        if (items[activeIndex]) {
-            items[activeIndex].scrollIntoView({ block: "nearest" });
-        }
+    function initials(name) {
+        return String(name || "?").split(" ").map((part) => part[0]).join("").slice(0, 2).toUpperCase();
     }
 
-    function selectEmployee(item) {
-        selectEmployeeByData(item.dataset.id, item.dataset.name);
+    function showToast(el, text, type) {
+        if (!el) return;
+        el.textContent = text;
+        el.className = `toast toast--${type}`;
+        if (type === "success") setTimeout(() => el.className = "toast toast--hidden", 3000);
     }
 
-    function selectEmployeeByData(id, name) {
-        employeeId.value = id;
-        employeeInput.value = name;
-        employeeClear.classList.remove("hidden");
-        employeeCombobox.classList.add("combobox--selected");
-        closeList();
-    }
-
-    function clearSelection(clearInput) {
-        employeeId.value = "";
-        employeeCombobox.classList.remove("combobox--selected");
-        employeeClear.classList.add("hidden");
-        if (clearInput) {
-            employeeInput.value = "";
-            closeList();
-        }
-    }
-
-    function resetEmployeePicker() {
-        employeeInput.value = "";
-        clearSelection(true);
-    }
-
-    taskForm.addEventListener("submit", async (e) => {
-        e.preventDefault();
-        hideMessage();
-
-        if (!employeeId.value) {
-            const query = employeeInput.value.trim();
-            if (query.length >= 2) {
-                const exact = findExactMatch(query);
-                if (exact) {
-                    selectEmployeeByData(exact.employee_id, exact.employee_name);
-                } else {
-                    await handleInlineAdd(query);
-                    if (!employeeId.value) return;
-                }
-            } else {
-                showMessage("Please select or add an employee name.", "error");
-                employeeInput.focus();
-                openList(query);
-                return;
-            }
-        }
-
-        const payload = {
-            employee_id: employeeId.value,
-            task_title: document.getElementById("task_title").value,
-            completed: document.getElementById("completed").value === "true",
-        };
-
-        submitBtn.disabled = true;
-        submitBtn.textContent = "Submitting...";
-
-        try {
-            const url = editingTaskId ? `/api/tasks/${editingTaskId}` : "/api/tasks";
-            const method = editingTaskId ? "PUT" : "POST";
-
-            const res = await fetch(url, {
-                method,
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload),
-            });
-
-            const data = await res.json();
-
-            if (!res.ok) {
-                showMessage(data.error || "Something went wrong.", "error");
-                return;
-            }
-
-            showMessage(data.message, "success");
-            taskForm.reset();
-            resetEmployeePicker();
-            editingTaskId = null;
-            submitBtn.textContent = "Submit Task";
-            loadTasks();
-        } catch {
-            showMessage("Network error. Is the server running?", "error");
-        } finally {
-            submitBtn.disabled = false;
-            if (!editingTaskId) {
-                submitBtn.textContent = "Submit Task";
-            }
-        }
-    });
-
-    taskForm.addEventListener("reset", () => {
-        editingTaskId = null;
-        submitBtn.textContent = "Submit Task";
-        resetEmployeePicker();
-        hideMessage();
-    });
-
-    async function loadEmployees() {
-        try {
-            const res = await fetch("/api/employees");
-            allEmployees = await res.json();
-
-            if (employeeCountHint) {
-                employeeCountHint.textContent = `${allEmployees.length} employees — search or add any name`;
-            }
-            renderEmployeeList(document.getElementById("employeeSearch")?.value.trim() || "");
-            renderReports();
-        } catch {
-            if (employeeCountHint) {
-                employeeCountHint.textContent = "Could not load employees";
-            }
-        }
-    }
-
-    async function loadTasks() {
-        try {
-            const res = await fetch("/api/tasks");
-            const tasks = await res.json();
-            allTasks = tasks;
-
-            updateStats(tasks);
-            renderReports();
-
-            if (tasks.length === 0) {
-                tasksBody.innerHTML =
-                    '<tr><td colspan="6" class="empty-cell">No tasks yet — assign one using the form.</td></tr>';
-                return;
-            }
-
-            tasksBody.innerHTML = tasks
-                .map(
-                    (t) => `
-                <tr>
-                    <td class="task-id">#${t.task_id}</td>
-                    <td>
-                        <div class="emp-cell">
-                            <span class="emp-avatar">${getInitials(t.employee_name)}</span>
-                            <span>${escapeHtml(t.employee_name)}</span>
-                        </div>
-                    </td>
-                    <td>${escapeHtml(t.task_title)}</td>
-                    <td>
-                        <span class="status-pill ${t.completed ? "status-done" : "status-pending"}">
-                            ${t.completed ? "Completed" : "Pending"}
-                        </span>
-                    </td>
-                    <td class="date-cell">${t.created_at || "—"}</td>
-                    <td class="action-cell">
-                        <button class="btn-edit" data-id="${t.task_id}"
-                            data-employee="${t.employee_id}"
-                            data-name="${escapeHtml(t.employee_name)}"
-                            data-title="${escapeHtml(t.task_title)}"
-                            data-completed="${t.completed}">Edit</button>
-                        <button class="btn-delete" data-id="${t.task_id}"
-                            data-title="${escapeHtml(t.task_title)}">Remove</button>
-                    </td>
-                </tr>`
-                )
-                .join("");
-
-            document.querySelectorAll(".btn-edit").forEach((btn) => {
-                btn.addEventListener("click", () => editTask(btn));
-            });
-
-            document.querySelectorAll(".btn-delete").forEach((btn) => {
-                btn.addEventListener("click", () => deleteTask(btn));
-            });
-        } catch {
-            tasksBody.innerHTML =
-                '<tr><td colspan="6" class="empty-cell">Failed to load tasks.</td></tr>';
-        }
-    }
-
-    function updateStats(tasks) {
-        const total = document.getElementById("statTotal");
-        const pending = document.getElementById("statPending");
-        const done = document.getElementById("statDone");
-        if (!total) return;
-
-        total.textContent = tasks.length;
-        pending.textContent = tasks.filter((t) => !t.completed).length;
-        done.textContent = tasks.filter((t) => t.completed).length;
-    }
-
-    function editTask(btn) {
-        editingTaskId = btn.dataset.id;
-        employeeId.value = btn.dataset.employee;
-        employeeInput.value = btn.dataset.name || "";
-        employeeClear.classList.remove("hidden");
-        employeeCombobox.classList.add("combobox--selected");
-        document.getElementById("task_title").value = btn.dataset.title;
-        document.getElementById("completed").value = btn.dataset.completed;
-        submitBtn.textContent = "Update Task";
-
-        document.getElementById("taskForm").closest(".card").scrollIntoView({ behavior: "smooth" });
-        showMessage(`Editing Task #${editingTaskId}`, "success");
-    }
-
-    async function deleteTask(btn) {
-        const taskId = btn.dataset.id;
-        const taskTitle = btn.dataset.title;
-        const confirmed = confirm(
-            `Remove Task #${taskId} (${taskTitle})?\n\nThis cannot be undone.`
-        );
-        if (!confirmed) return;
-
-        try {
-            const res = await fetch(`/api/tasks/${taskId}`, { method: "DELETE" });
-            const data = await res.json();
-
-            if (!res.ok) {
-                showMessage(data.error || "Could not remove task.", "error");
-                return;
-            }
-
-            if (editingTaskId) {
-                taskForm.reset();
-                resetEmployeePicker();
-                editingTaskId = null;
-                submitBtn.textContent = "Submit Task";
-            }
-
-            showMessage(data.message, "success");
-            loadTasks();
-        } catch {
-            showMessage("Network error. Is the server running?", "error");
-        }
-    }
-
-    function showMessage(text, type) {
-        if (formMessageTimer) {
-            clearTimeout(formMessageTimer);
-            formMessageTimer = null;
-        }
-        formMessage.textContent = text;
-        formMessage.className = `toast toast--${type}`;
-
-        if (type === "success") {
-            formMessageTimer = setTimeout(() => {
-                hideMessage();
-                formMessageTimer = null;
-            }, 2000);
-        }
-    }
-
-    function hideMessage() {
-        if (formMessageTimer) {
-            clearTimeout(formMessageTimer);
-            formMessageTimer = null;
-        }
-        formMessage.className = "toast toast--hidden";
-    }
-
-    function getInitials(name) {
-        return name
-            .split(" ")
-            .map((w) => w[0])
-            .join("")
-            .slice(0, 2)
-            .toUpperCase();
-    }
-
-    function escapeHtml(str) {
+    function escapeHtml(value) {
         const div = document.createElement("div");
-        div.textContent = str;
+        div.textContent = value == null ? "" : String(value);
         return div.innerHTML;
     }
 });

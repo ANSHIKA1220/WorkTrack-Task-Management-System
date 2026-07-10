@@ -14,41 +14,6 @@
 
 ---
 
-## Abstract
-
-WorkTrack is a browser-based **Task Management System** developed for the **MP Online Internship - Software Development Course (Batch 10B)**. The application allows Admin and Manager users to maintain an employee directory, assign tasks, update task completion status, and view reports generated from live MySQL data.
-
-The system uses Flask for backend routing and session handling, MySQL for persistent storage, Jinja templates for rendering pages, and plain JavaScript for dashboard interactivity. It includes role-based access control so that Admin and Manager users receive different permissions while sharing the same application interface.
-
----
-
-## Problem Statement
-
-Manual task assignment through spreadsheets, chat messages, or paper records becomes difficult to manage as teams grow. Common issues include:
-
-- No centralized place to view assigned work
-- Difficulty tracking pending and completed tasks
-- Limited visibility into employee workload
-- No clear separation between Admin and Manager permissions
-- Reports requiring manual counting or spreadsheet formulas
-
-WorkTrack solves these problems by providing a structured web application where tasks, employees, user roles, and reports are managed through a MySQL-backed system.
-
----
-
-## Objectives
-
-- Provide secure login for Admin and Manager users
-- Maintain employee records in a searchable directory
-- Assign tasks to employees with task type, status, optional description, and optional due date
-- Display dashboard counters for total, pending, completed, and completion rate
-- Generate reports from actual MySQL records
-- Enforce backend role-based access control
-- Provide realistic seed data for demonstration
-- Keep the user interface responsive and suitable for a college project presentation
-
----
-
 ## Technology Stack
 
 | Layer | Technology | Purpose |
@@ -446,25 +411,6 @@ WorkTrack-Task-Management-System/
 |   |-- test_auth.py
 ```
 
----
-
-## How It Works
-
-1. A user opens the application and is redirected to `/login`.
-2. The user enters username, password, and role.
-3. Flask checks the user record in `login_table`.
-4. Werkzeug verifies the hashed password.
-5. On successful login, Flask stores `user_id`, `username`, and `role` in the session.
-6. The dashboard loads with role-specific sidebar items.
-7. JavaScript requests employees, tasks, reports, and Admin-only user data through REST APIs.
-8. Employees are loaded from the `employees` table with task counts.
-9. Tasks are loaded from the `tasks` table and joined with employee names.
-10. Dashboard counters and reports are calculated from live MySQL data.
-11. Admin-only actions are protected by backend role checks.
-12. Logout clears the session and returns the user to the login page.
-
----
-
 ## Testing
 
 A small unittest suite is included for authentication and role behavior.
@@ -481,19 +427,6 @@ The tests cover:
 - Manager restriction from Admin user API
 - Admin-only page blocking for Manager role
 - Task creation validation before database insertion
-
----
-
-## Future Enhancements
-
-- Employee self-login to view assigned tasks
-- Task priority levels
-- Task comments or activity history
-- More advanced user management
-- Export reports to PDF or Excel
-- Email notification on task assignment
-- Date range filters for reports
-- Dark mode option
 
 ---
 

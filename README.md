@@ -304,8 +304,6 @@ MYSQL_DATABASE=task_management
 SECRET_KEY=change-this-for-production
 ```
 
-Do not commit `.env` to GitHub because it may contain your MySQL password.
-
 ---
 
 ## Database Initialization
@@ -459,8 +457,6 @@ WorkTrack-Task-Management-System/
 10. Dashboard counters and reports are calculated from live MySQL data.
 11. Admin-only actions are protected by backend role checks.
 12. Logout clears the session and returns the user to the login page.
-
-This flow is useful for viva explanation because it shows frontend, backend, authentication, authorization, database design, and reporting working together.
 
 ---
 

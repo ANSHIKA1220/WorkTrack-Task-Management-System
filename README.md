@@ -6,7 +6,7 @@
 |---|---|
 | **Course** | MP Online Internship — Software Development |
 | **Batch** | 10B |
-| **Application No.** | IN26012596 |
+| **Application No.** | IN26012584 |
 | **Project Type** | Internship Project Submission |
 | **Author** | Anshika Shrivastava ([@ANSHIKA1220](https://github.com/ANSHIKA1220)) |
 | **Technologies** | HTML · CSS · JavaScript · Python (Flask) · MySQL |
@@ -20,9 +20,9 @@
 | **Programme** | MP Online Internship Programme |
 | **Course** | Software Development |
 | **Batch** | 10B |
-| **Application No.** | IN26012596 |
-| **Project Title** | Task Management System (TaskFlow) |
-| **Submitted By** | Yash Singh |
+| **Application No.** | IN26012584 |
+| **Project Title** | WorkTrack-Task-Management-System |
+| **Submitted By** | Anshika Shrivastava |
 
 > This project is developed as part of the **MP Online Internship — Software Development Course (Batch 10B)**, demonstrating practical skills in front-end development, Python back-end programming, and MySQL database management.
 
@@ -45,7 +45,7 @@ Manual task assignment through spreadsheets or messaging is error-prone and diff
 - Employee records are maintained in one place
 - Admins can **view reports** on workload and completion rates
 
-TaskFlow addresses these requirements with a secure login, intuitive dashboard, and persistent MySQL storage.
+WorkTrack addresses these requirements with a secure login, intuitive dashboard, and persistent MySQL storage.
 
 ---
 
@@ -287,7 +287,7 @@ task-management-system/
 
 ---
 
-## How It Works (Viva Points)
+## How It Works
 
 1. **User logs in** → Flask validates credentials against `login_table` using hashed password comparison.
 2. **Dashboard loads** → JavaScript fetches tasks and employees via `/api/tasks` and `/api/employees`.
@@ -325,5 +325,5 @@ This project was developed as part of the **MP Online Internship — Software De
 <p align="center">
   <strong>TaskFlow</strong> — Task Management System<br>
   <sub>MP Online Internship · Software Development · Batch 10B</sub><br>
-  <sub>Application No. IN26012596 · Yash Singh</sub>
+  <sub>Application No. IN26012584 · Anshika Shrivastava</sub>
 </p>
